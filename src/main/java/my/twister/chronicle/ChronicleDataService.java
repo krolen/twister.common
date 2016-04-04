@@ -1,6 +1,7 @@
 package my.twister.chronicle;
 
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import my.twister.entities.IShortProfile;
 import my.twister.entities.IShortTweet;
 import my.twister.utils.Constants;
@@ -12,10 +13,12 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by kkulagin on 4/2/2016.
@@ -29,6 +32,8 @@ public abstract class ChronicleDataService implements LogAware {
   public abstract ChronicleMap<LongValue, LongValue> getId2TimeMap();
 
   public abstract ChronicleMap<LongValue, IShortTweet> getTweetsDataMap(long tweetId);
+
+  public abstract void connect(int maxTweetDataMapsToConnect);
 
   public void close() {
     Optional.ofNullable(getId2ProfileMap()).ifPresent(ChronicleMap::close);
@@ -55,9 +60,17 @@ public abstract class ChronicleDataService implements LogAware {
     private ChronicleMap<CharSequence, LongValue> name2IdMap;
     private ChronicleMap<LongValue, LongValue> id2TimeMap;
     private ChronicleMap<LongValue, IShortProfile> id2ProfileMap;
-    private NavigableMap<Long, ChronicleMap<LongValue, IShortTweet>> tweetsDataMaps = Maps.newTreeMap();
+    private NavigableMap<Long, ChronicleMap<LongValue, IShortTweet>> tweetsDataMaps =
+        Collections.synchronizedNavigableMap(Maps.newTreeMap());
 
     private DefaultChronicleDataService() {
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+          DefaultChronicleDataService.this.close();
+        }
+      });
+
 //    name2IdFileLocation = (String) stormConf.get("profile.id.to.profile.name2IdFile");
 //    name2IdFile = new File(name2IdFileLocation);
 //    ChronicleMapBuilder<Long, IShortProfile> builder =
@@ -74,6 +87,30 @@ public abstract class ChronicleDataService implements LogAware {
     }
 
     @Override
+    public void connect(int maxTweetDataMapsToConnect) {
+      ScheduledExecutorService service = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).build());
+      // this will keep only the latest 4 entries in map
+      service.scheduleAtFixedRate(() -> {
+        File file = new File(getProperty(Constants.TWEETS_DATA_DIR));
+        if (file.exists() && file.isDirectory()) {
+          Long lastKey = tweetsDataMaps.lastKey();
+          File[] array = file.listFiles();
+          Arrays.stream(array).map((f) -> Long.valueOf(f.getName())).
+              sorted().filter((l) -> l > lastKey).
+              forEach((l) -> {
+                if (maxTweetDataMapsToConnect > 0 && tweetsDataMaps.size() > maxTweetDataMapsToConnect) {
+                  Optional.ofNullable(tweetsDataMaps.firstEntry().getValue()).ifPresent(ChronicleMap::close);
+                }
+                createTweetsMap(l, false);
+              });
+        } else {
+          throw new RuntimeException("Cannot find tweet data directory");
+        }
+      }, 1, 5, TimeUnit.MINUTES);
+    }
+
+    @Override
+    // this method is a bit of mess
     public ChronicleMap<LongValue, IShortTweet> getTweetsDataMap(long tweetId) {
       Map.Entry<Long, ChronicleMap<LongValue, IShortTweet>> entry = tweetsDataMaps.floorEntry(tweetId);
       return entry == null ? null : entry.getValue();
@@ -135,8 +172,7 @@ public abstract class ChronicleDataService implements LogAware {
               }
             }).
             entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 25_000_000).
-            createOrRecoverPersistedTo(tweetsDataFile);
-
+            createPersistedTo(tweetsDataFile);
         tweetsDataMaps.put(id, map);
       } catch (IOException e) {
         throw new RuntimeException(e);
@@ -151,7 +187,7 @@ public abstract class ChronicleDataService implements LogAware {
         name2IdMap = ChronicleMap.of(CharSequence.class, LongValue.class).putReturnsNull(true).
             averageKeySize("this_is_18_charctr".length() * 4).
             entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 500_000_000).
-            createOrRecoverPersistedTo(name2IdFile);
+            createPersistedTo(name2IdFile);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -164,7 +200,7 @@ public abstract class ChronicleDataService implements LogAware {
       try {
         id2TimeMap = ChronicleMap.of(LongValue.class, LongValue.class).putReturnsNull(true).
             entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 500_000_000).
-            createOrRecoverPersistedTo(time2IdFile);
+            createPersistedTo(time2IdFile);
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
