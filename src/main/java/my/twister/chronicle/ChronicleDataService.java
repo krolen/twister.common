@@ -92,7 +92,7 @@ public abstract class ChronicleDataService implements LogAware {
       createProfileName2IdMap(false);
 
       ScheduledExecutorService service = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).build());
-      // this will keep only the latest 4 entries in map
+      // this will keep only the latest maxTweetDataMapsToConnect entries in map
       service.scheduleAtFixedRate(() -> {
         File file = new File(getProperty(Constants.TWEETS_DATA_DIR));
         if (file.exists() && file.isDirectory()) {
@@ -127,6 +127,10 @@ public abstract class ChronicleDataService implements LogAware {
     public void close() {
       super.close();
       tweetsDataMaps.values().stream().forEach(ChronicleMap::close);
+    }
+
+    NavigableMap<Long, ChronicleMap<LongValue, IShortTweet>> getTweetsDataMaps() {
+      return tweetsDataMaps;
     }
 
     boolean removeTweetsMap(long id) {
