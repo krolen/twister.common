@@ -5,9 +5,9 @@ package my.twister.entities;
  */
 public interface IShortTweet {
 
-  long getId();
-
-  void setId(long id);
+//  long getId();
+//
+//  void setId(long id);
 
   long getCreateDate();
 

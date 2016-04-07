@@ -7,10 +7,11 @@ import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.bytes.VanillaBytes;
 import net.openhft.chronicle.core.values.LongValue;
 import net.openhft.chronicle.map.ChronicleMap;
+import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
-import net.openhft.chronicle.queue.impl.single.SingleChronicleQueue;
+import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,9 +40,11 @@ public class HFTTest {
 
 //  @Test
   public void testQueue() {
-    SingleChronicleQueue queue = null;
+    ChronicleQueue queue = null;
     try {
+
       queue = ChronicleQueueBuilder.single("hfttests" + File.separator + "deletequeue").build();
+//      queue = SingleChronicleQueueBuilder.binary(new File("hfttests" + File.separator + "deletequeue")).build();
       final VanillaBytes<Void> writeBytes = Bytes.allocateDirect(8);
       VanillaBytes<Void> readBytes = Bytes.allocateDirect(8);
       final ExcerptAppender appender = queue.createAppender();
@@ -49,7 +52,8 @@ public class HFTTest {
 
 //      Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().build()).execute(() -> {
       Stopwatch started = Stopwatch.createStarted();
-      LongStream.range(0, 5_000_000).forEach((l) -> {
+      LongStream.range(0, 5_00).forEach((l) -> {
+//      LongStream.range(0, 5_000_000).forEach((l) -> {
           appender.writeBytes(writeBytes.append(l));
           writeBytes.clear();
         });
@@ -58,16 +62,25 @@ public class HFTTest {
       started.reset();
 
       Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+      int count = 0;
       started.start();
       while(tailer.readBytes(readBytes)) {
-        readBytes.parseLong();
-//        System.out.println(readBytes.parseLong());
+        long l = readBytes.parseLong();
+        count++;
+//        System.out.println(l);
         readBytes.clear();
       }
       System.out.println(started.elapsed(TimeUnit.NANOSECONDS));
+      System.out.println("count = " + count);
 
     } finally {
-      Optional.ofNullable(queue).ifPresent(SingleChronicleQueue::close);
+      Optional.ofNullable(queue).ifPresent((chronicleQueue) -> {
+        try {
+          chronicleQueue.close();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      });
     }
 
   }

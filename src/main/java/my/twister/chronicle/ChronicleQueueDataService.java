@@ -39,6 +39,7 @@ public abstract class ChronicleQueueDataService implements LogAware {
     @Override
     public ChronicleQueue createQueue(String id) {
       String location = getQueueLocation(id);
+//      return SingleChronicleQueueBuilder.binary(new File(location)).build();
       return ChronicleQueueBuilder.single(location).build();
     }
 

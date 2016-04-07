@@ -1,6 +1,5 @@
 package my.twister.utils;
 
-import my.twister.chronicle.ChronicleQueueDataService;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
