@@ -5,19 +5,19 @@ package my.twister.entities;
  */
 public interface IShortTweet {
 
-  public long getId();
+  long getId();
 
-  public void setId(long id);
+  void setId(long id);
 
-  public long getCreateDate();
+  long getCreateDate();
 
-  public void setCreateDate(long createDate);
+  void setCreateDate(long createDate);
 
-  public long getAuthorId();
+  long getAuthorId();
 
-  public void setAuthorId(long authorId);
+  void setAuthorId(long authorId);
 
-  public long[] getMentions();
+  long[] getMentions();
 
-  public void setMentions(long[] mentions);
+  void setMentions(long[] mentions);
 }

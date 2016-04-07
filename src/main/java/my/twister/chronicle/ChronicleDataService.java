@@ -4,6 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import my.twister.entities.IShortProfile;
 import my.twister.entities.IShortTweet;
+import my.twister.entities.SampleShortTweet;
 import my.twister.utils.Constants;
 import my.twister.utils.LogAware;
 import my.twister.utils.Utils;
@@ -13,6 +14,7 @@ import net.openhft.chronicle.map.ChronicleMap;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -143,43 +145,7 @@ public abstract class ChronicleDataService implements LogAware {
       File tweetsDataFile = Utils.createFile(location, forceRecreate);
       try {
         ChronicleMap<LongValue, IShortTweet> map = ChronicleMap.of(LongValue.class, IShortTweet.class).putReturnsNull(true).
-            constantValueSizeBySample(new IShortTweet() {
-              @Override
-              public long getId() {
-                return System.currentTimeMillis();
-              }
-
-              @Override
-              public void setId(long id) {
-              }
-
-              @Override
-              public long getCreateDate() {
-                return System.currentTimeMillis();
-              }
-
-              @Override
-              public void setCreateDate(long createDate) {
-              }
-
-              @Override
-              public long getAuthorId() {
-                return System.currentTimeMillis();
-              }
-
-              @Override
-              public void setAuthorId(long authorId) {
-              }
-
-              @Override
-              public long[] getMentions() {
-                return new long[10];
-              }
-
-              @Override
-              public void setMentions(long[] mentions) {
-              }
-            }).
+            constantValueSizeBySample(new SampleShortTweet()).
             entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 25_000_000).
             createPersistedTo(tweetsDataFile);
         tweetsDataMaps.put(id, map);

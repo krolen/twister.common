@@ -8,6 +8,7 @@ import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.io.Serializable;
 
 /**
  * Created by kkulagin on 4/2/2016.
@@ -33,7 +34,7 @@ public abstract class ChronicleQueueDataService implements LogAware {
   }
 
 
-  static class DefaultChronicleQueueDataService extends ChronicleQueueDataService {
+  static class DefaultChronicleQueueDataService extends ChronicleQueueDataService implements Serializable {
 
     @Override
     public ChronicleQueue createQueue(String id) {
