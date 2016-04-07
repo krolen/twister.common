@@ -11,13 +11,32 @@
     <properties>
         <java.version>1.8</java.version>
         <chronicle.map.version>3.8.0</chronicle.map.version>
+        <chronicle.queue.version>4.2.1</chronicle.queue.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>net.openhft</groupId>
+                <artifactId>chronicle-bom</artifactId>
+                <type>pom</type>
+                <version>1.12.1</version>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
+
         <dependency>
             <groupId>net.openhft</groupId>
             <artifactId>chronicle-map</artifactId>
             <version>${chronicle.map.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>chronicle-queue</artifactId>
+            <version>${chronicle.queue.version}</version>
         </dependency>
 
         <dependency>

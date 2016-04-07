@@ -1,11 +1,19 @@
 package my.twister.utils;
 
+import my.twister.chronicle.ChronicleQueueDataService;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.Properties;
 
 /**
  * Created by kkulagin on 5/15/2015.
@@ -55,5 +63,33 @@ public class Utils {
     return dateTime;
   }
 
+  @NotNull
+  public static File createFile(String fileLocation, boolean forceRecreate) {
+    File file = new File(fileLocation);
+    if (file.exists() && forceRecreate) {
+      file.delete();
+    }
+    if (!file.exists()) {
+      try {
+        file.getParentFile().mkdirs();
+        file.createNewFile();
+      } catch (IOException e) {
+        // fail fast
+        throw new RuntimeException(e);
+      }
+    }
+    return file;
+  }
 
+
+  public static String getProperty(String name) {
+    final Properties properties = new Properties();
+    try (InputStream stream = Utils.class.getResourceAsStream("/hft.properties")) {
+      properties.load(stream);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return Optional.ofNullable(properties.getProperty(name)).
+        orElseThrow(() -> new RuntimeException("Property " + name + " was not found"));
+  }
 }

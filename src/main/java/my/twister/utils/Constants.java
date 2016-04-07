@@ -13,5 +13,6 @@ public interface Constants {
   String TWEET_INDEXER_PORT = "tweetIndexerPort";
 
   String TWEETS_DATA_DIR = "tweets.data.dir";
+  String QUEUES_DATA_DIR = "queues.data.dir";
 
 }

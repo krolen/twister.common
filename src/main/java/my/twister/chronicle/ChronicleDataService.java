@@ -6,19 +6,17 @@ import my.twister.entities.IShortProfile;
 import my.twister.entities.IShortTweet;
 import my.twister.utils.Constants;
 import my.twister.utils.LogAware;
+import my.twister.utils.Utils;
 import net.openhft.chronicle.core.values.LongValue;
 import net.openhft.chronicle.map.ChronicleMap;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Created by kkulagin on 4/2/2016.
@@ -142,7 +140,7 @@ public abstract class ChronicleDataService implements LogAware {
 
     void createTweetsMap(long id, boolean forceRecreate) {
       String location = getProperty(Constants.TWEETS_DATA_DIR) + File.separator + id;
-      File tweetsDataFile = createFile(location, forceRecreate);
+      File tweetsDataFile = Utils.createFile(location, forceRecreate);
       try {
         ChronicleMap<LongValue, IShortTweet> map = ChronicleMap.of(LongValue.class, IShortTweet.class).putReturnsNull(true).
             constantValueSizeBySample(new IShortTweet() {
@@ -193,7 +191,7 @@ public abstract class ChronicleDataService implements LogAware {
 
     void createProfileName2IdMap(boolean forceRecreate) {
       String location = getProperty(Constants.PROFILE_NAME_2_ID);
-      File name2IdFile = createFile(location, forceRecreate);
+      File name2IdFile = Utils.createFile(location, forceRecreate);
       try {
         name2IdMap = ChronicleMap.of(CharSequence.class, LongValue.class).putReturnsNull(true).
             averageKeySize("this_is_18_charctr".length() * 4).
@@ -207,7 +205,7 @@ public abstract class ChronicleDataService implements LogAware {
 
     void createProfileId2TimeMap(boolean forceRecreate) {
       String location = getProperty(Constants.PROFILE_ID_2_TIME);
-      File time2IdFile = createFile(location, forceRecreate);
+      File time2IdFile = Utils.createFile(location, forceRecreate);
       try {
         id2TimeMap = ChronicleMap.of(LongValue.class, LongValue.class).putReturnsNull(true).
             entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 500_000_000).
@@ -227,24 +225,6 @@ public abstract class ChronicleDataService implements LogAware {
       }
       return Optional.ofNullable(properties.getProperty(name)).
           orElseThrow(() -> new RuntimeException("Property " + name + " was not found"));
-    }
-
-    @NotNull
-    private static File createFile(String fileLocation, boolean forceRecreate) {
-      File file = new File(fileLocation);
-      if (file.exists() && forceRecreate) {
-        file.delete();
-      }
-      if (!file.exists()) {
-        try {
-          file.getParentFile().mkdirs();
-          file.createNewFile();
-        } catch (IOException e) {
-          // fail fast
-          throw new RuntimeException(e);
-        }
-      }
-      return file;
     }
 
     @Override

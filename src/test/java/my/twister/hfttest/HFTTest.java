@@ -1,12 +1,22 @@
 package my.twister.hfttest;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Uninterruptibles;
+import my.twister.utils.Utils;
+import net.openhft.chronicle.bytes.Bytes;
+import net.openhft.chronicle.bytes.VanillaBytes;
 import net.openhft.chronicle.core.values.LongValue;
 import net.openhft.chronicle.map.ChronicleMap;
+import net.openhft.chronicle.queue.ChronicleQueueBuilder;
+import net.openhft.chronicle.queue.ExcerptAppender;
+import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.queue.impl.single.SingleChronicleQueue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.LongStream;
 
 /**
  * Created by kkulagin on 4/2/2016.
@@ -15,17 +25,7 @@ public class HFTTest {
 
 //  @Test
   public void testCreateAndDeleteFiles() {
-    String location = "hfttests" + File.separator + "delete";
-    File file = new File(location);
-    if (!file.exists()) {
-      try {
-        file.getParentFile().mkdirs();
-        file.createNewFile();
-      } catch (IOException e) {
-        // fail fast
-        throw new RuntimeException(e);
-      }
-    }
+    File file = Utils.createFile("hfttests" + File.separator + "delete", true);
     try {
       ChronicleMap<LongValue, LongValue> map = ChronicleMap.of(LongValue.class, LongValue.class).putReturnsNull(true).
           entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 500_000).
@@ -35,5 +35,40 @@ public class HFTTest {
     }
 
     Uninterruptibles.sleepUninterruptibly(30, TimeUnit.SECONDS);
+  }
+
+//  @Test
+  public void testQueue() {
+    SingleChronicleQueue queue = null;
+    try {
+      queue = ChronicleQueueBuilder.single("hfttests" + File.separator + "deletequeue").build();
+      final VanillaBytes<Void> writeBytes = Bytes.allocateDirect(8);
+      VanillaBytes<Void> readBytes = Bytes.allocateDirect(8);
+      final ExcerptAppender appender = queue.createAppender();
+      ExcerptTailer tailer = queue.createTailer();
+
+//      Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().build()).execute(() -> {
+      Stopwatch started = Stopwatch.createStarted();
+      LongStream.range(0, 5_000_000).forEach((l) -> {
+          appender.writeBytes(writeBytes.append(l));
+          writeBytes.clear();
+        });
+      System.out.println(started.elapsed(TimeUnit.NANOSECONDS));
+//      });
+      started.reset();
+
+      Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+      started.start();
+      while(tailer.readBytes(readBytes)) {
+        readBytes.parseLong();
+//        System.out.println(readBytes.parseLong());
+        readBytes.clear();
+      }
+      System.out.println(started.elapsed(TimeUnit.NANOSECONDS));
+
+    } finally {
+      Optional.ofNullable(queue).ifPresent(SingleChronicleQueue::close);
+    }
+
   }
 }
