@@ -12,7 +12,6 @@ import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
-import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 import net.openhft.chronicle.values.Array;
 import net.openhft.chronicle.values.Values;
 
@@ -29,7 +28,7 @@ public class HFTTest {
 
 //  @Test
   public void testCreateAndDeleteFiles() {
-    File file = Utils.createFile("hfttests" + File.separator + "delete", true);
+    File file = Utils.getOrCreateFile("hfttests" + File.separator + "delete", true);
     try {
       ChronicleMap<LongValue, LongValue> map = ChronicleMap.of(LongValue.class, LongValue.class).putReturnsNull(true).
           entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 500_000).
@@ -90,7 +89,7 @@ public class HFTTest {
 
 //  @org.junit.Test
   public void testArrays() {
-    File file = Utils.createFile("hfttests" + File.separator + "delete", true);
+    File file = Utils.getOrCreateFile("hfttests" + File.separator + "delete", true);
     ChronicleMap<LongValue, ITest> map = null;
     try {
       try {

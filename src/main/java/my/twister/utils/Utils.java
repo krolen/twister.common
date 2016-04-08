@@ -63,7 +63,7 @@ public class Utils {
   }
 
   @NotNull
-  public static File createFile(String fileLocation, boolean forceRecreate) {
+  public static File getOrCreateFile(String fileLocation, boolean forceRecreate) {
     File file = new File(fileLocation);
     if (forceRecreate && file.exists()) {
       file.delete();
