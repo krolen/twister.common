@@ -142,8 +142,9 @@ public abstract class ChronicleDataService implements LogAware {
       String location = getProperty(Constants.TWEETS_DATA_DIR) + File.separator + id;
       File tweetsDataFile = Utils.createFile(location, forceRecreate);
       try {
-        ChronicleMap<LongValue, IShortTweet> map = ChronicleMap.of(LongValue.class, IShortTweet.class).putReturnsNull(true).
-            constantValueSizeBySample(new SampleShortTweet()).
+        ChronicleMap<LongValue, IShortTweet> map = ChronicleMap.of(LongValue.class, IShortTweet.class).
+            putReturnsNull(true).
+//            constantValueSizeBySample(new SampleShortTweet()).
             entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 25_000_000).
             createPersistedTo(tweetsDataFile);
         tweetsDataMaps.put(id, map);

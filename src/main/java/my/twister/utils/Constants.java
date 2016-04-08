@@ -15,4 +15,6 @@ public interface Constants {
   String TWEETS_DATA_DIR = "tweets.data.dir";
   String QUEUES_DATA_DIR = "queues.data.dir";
 
+  int MAX_MENTIONS_SIZE = 10;
+
 }

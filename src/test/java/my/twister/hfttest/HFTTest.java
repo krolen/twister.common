@@ -2,6 +2,7 @@ package my.twister.hfttest;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Uninterruptibles;
+import my.twister.utils.Constants;
 import my.twister.utils.Utils;
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.bytes.VanillaBytes;
@@ -12,6 +13,8 @@ import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
+import net.openhft.chronicle.values.Array;
+import net.openhft.chronicle.values.Values;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,4 +87,58 @@ public class HFTTest {
     }
 
   }
+
+//  @org.junit.Test
+  public void testArrays() {
+    File file = Utils.createFile("hfttests" + File.separator + "delete", true);
+    ChronicleMap<LongValue, ITest> map = null;
+    try {
+      try {
+        map = ChronicleMap.of(LongValue.class, ITest.class).putReturnsNull(true).
+            entries(10).
+            createPersistedTo(file);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
+      ITest iTest = Values.newHeapInstance(ITest.class);
+      LongValue key = Values.newHeapInstance(LongValue.class);
+
+      for (long i = 0; i < 20; i++) {
+        iTest.setMentionAt(0, 1);
+        iTest.setMentionAt(1, 2);
+        iTest.setMentionAt(2, 3);
+        iTest.setData(i + i);
+        key.setValue(i);
+        map.put(key, iTest);
+      }
+
+      ITest readTest = Values.newHeapInstance(ITest.class);
+
+      final ChronicleMap<LongValue, ITest> finalMap = map;
+      map.keySet().stream().forEach((l) -> {
+        ITest read = finalMap.getUsing(l, readTest);
+        System.out.println(read);
+      });
+    } finally {
+      Optional.ofNullable(map).ifPresent(ChronicleMap::close);
+    }
+
+
+  }
+
+  public interface ITest {
+
+    long getData();
+
+    void setData(long data);
+
+    @Array(length = Constants.MAX_MENTIONS_SIZE)
+    long getMentionAt(int index);
+
+    void setMentionAt(int index, long value);
+
+  }
+
+
 }
