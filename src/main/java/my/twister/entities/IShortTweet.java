@@ -24,6 +24,6 @@ public interface IShortTweet {
   @Array(length = Constants.MAX_MENTIONS_SIZE)
   long getMentionAt(int index);
 
-  void setMentionsAt(int index, long value);
+  void setMentionAt(int index, long value);
 
 }

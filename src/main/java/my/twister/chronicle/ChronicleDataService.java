@@ -88,30 +88,36 @@ public abstract class ChronicleDataService implements LogAware {
     public void connect(int maxTweetDataMapsToConnect) {
       createProfileId2TimeMap(false);
       createProfileName2IdMap(false);
+      refreshTweetMaps(maxTweetDataMapsToConnect);
 
       ScheduledExecutorService service = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).build());
       // this will keep only the latest maxTweetDataMapsToConnect entries in map
       service.scheduleAtFixedRate(() -> {
-        File file = new File(getProperty(Constants.TWEETS_DATA_DIR));
-        if (file.exists() && file.isDirectory()) {
-          File[] array = file.listFiles();
-          if(array == null || array.length == 0) {
-            log().warn("No tweet data were found!!!");
-          } else {
-            Long lastKey = tweetsDataMaps.lastKey();
-            Arrays.stream(array).map((f) -> Long.valueOf(f.getName())).
-                sorted().filter((l) -> l > lastKey).
-                forEach((l) -> {
-                  if (maxTweetDataMapsToConnect > 0 && tweetsDataMaps.size() > maxTweetDataMapsToConnect) {
-                    Optional.ofNullable(tweetsDataMaps.firstEntry().getValue()).ifPresent(ChronicleMap::close);
-                  }
-                  createTweetsMap(l, false);
-                });
-          }
+        refreshTweetMaps(maxTweetDataMapsToConnect);
+      }, 3, 3, TimeUnit.MINUTES);
+    }
+
+    private void refreshTweetMaps(int maxTweetDataMapsToConnect) {
+      File file = new File(getProperty(Constants.TWEETS_DATA_DIR));
+      if (file.exists() && file.isDirectory()) {
+        File[] files = file.listFiles();
+        if(files == null || files.length == 0) {
+          log().warn("No tweet data were found!!!");
         } else {
-          throw new RuntimeException("Cannot find tweet data directory");
+          Long lastKey = tweetsDataMaps.isEmpty() ? 0L : tweetsDataMaps.lastKey();
+          Arrays.stream(files).map((f) -> Long.valueOf(f.getName())).
+              sorted(Comparator.reverseOrder()).
+              filter((l) -> l > lastKey).
+              forEach((l) -> {
+                if (maxTweetDataMapsToConnect > 0 && tweetsDataMaps.size() > maxTweetDataMapsToConnect) {
+                  Optional.ofNullable(tweetsDataMaps.firstEntry().getValue()).ifPresent(ChronicleMap::close);
+                }
+                createTweetsMap(l, false);
+              });
         }
-      }, 1, 3, TimeUnit.MINUTES);
+      } else {
+        throw new RuntimeException("Cannot find tweet data directory");
+      }
     }
 
     @Override
