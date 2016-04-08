@@ -69,25 +69,13 @@ public abstract class ChronicleDataService implements LogAware {
         }
       });
 
-//    name2IdFileLocation = (String) stormConf.get("profile.id.to.profile.name2IdFile");
-//    name2IdFile = new File(name2IdFileLocation);
-//    ChronicleMapBuilder<Long, IShortProfile> builder =
-//      ChronicleMapBuilder.of(Long.class, IShortProfile.class).
-//        constantValueSizeBySample(new ShortProfile()).
-//        entries(400_000_000);
-//    try {
-//      id2ProfileMap = builder.createPersistedTo(name2IdFile);
-//    } catch (IOException e) {
-//      // fail fast
-//      throw new RuntimeException(e);
-//    }
-
     }
 
     @Override
     public void connect(int maxTweetDataMapsToConnect) {
       createProfileId2TimeMap(false);
       createProfileName2IdMap(false);
+      createId2ProfileMap(false);
       refreshTweetMaps(maxTweetDataMapsToConnect);
 
       ScheduledExecutorService service = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setDaemon(true).build());
@@ -150,7 +138,6 @@ public abstract class ChronicleDataService implements LogAware {
       try {
         ChronicleMap<LongValue, IShortTweet> map = ChronicleMap.of(LongValue.class, IShortTweet.class).
             putReturnsNull(true).
-//            constantValueSizeBySample(new SampleShortTweet()).
             entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 25_000_000).
             createPersistedTo(tweetsDataFile);
         tweetsDataMaps.put(id, map);
@@ -172,6 +159,19 @@ public abstract class ChronicleDataService implements LogAware {
         throw new RuntimeException(e);
       }
       log().info("ProfileName2Id Map created at location {}", location);
+    }
+
+    void createId2ProfileMap(boolean forceRecreate) {
+      String location = getProperty(Constants.PROFILE_ID_2_PROFILE);
+      File id2ProfileFile = Utils.createFile(location, forceRecreate);
+      try {
+        id2ProfileMap = ChronicleMap.of(LongValue.class, IShortProfile.class).putReturnsNull(true).
+            entries(System.getProperty("os.name").toLowerCase().contains("win") ? 10_000 : 500_000_000).
+            createPersistedTo(id2ProfileFile);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+      log().info("Id2Profile Map created at location {}", location);
     }
 
     void createProfileId2TimeMap(boolean forceRecreate) {

@@ -65,7 +65,7 @@ public class Utils {
   @NotNull
   public static File createFile(String fileLocation, boolean forceRecreate) {
     File file = new File(fileLocation);
-    if (file.exists() && forceRecreate) {
+    if (forceRecreate && file.exists()) {
       file.delete();
     }
     if (!file.exists()) {
