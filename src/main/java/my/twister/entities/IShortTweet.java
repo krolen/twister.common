@@ -1,6 +1,7 @@
 package my.twister.entities;
 
 import my.twister.utils.Constants;
+import net.openhft.chronicle.core.values.LongValue;
 import net.openhft.chronicle.values.Array;
 
 /**
@@ -20,6 +21,9 @@ public interface IShortTweet {
 
   void setAuthorId(long authorId);
 
+  long getRetweetedTweetUserId();
+
+  void setRetweetedTweetUserId(long userId);
 
   @Array(length = Constants.MAX_MENTIONS_SIZE)
   long getMentionAt(int index);

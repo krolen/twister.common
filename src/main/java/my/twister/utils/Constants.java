@@ -17,4 +17,7 @@ public interface Constants {
 
   int MAX_MENTIONS_SIZE = 10;
 
+  int INDEXERS_NUMBER = 3;
+
+
 }
