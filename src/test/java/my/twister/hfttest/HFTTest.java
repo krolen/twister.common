@@ -6,6 +6,7 @@ import my.twister.utils.Constants;
 import my.twister.utils.Utils;
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.bytes.VanillaBytes;
+import net.openhft.chronicle.core.io.Closeable;
 import net.openhft.chronicle.core.values.LongValue;
 import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.queue.ChronicleQueue;
@@ -76,15 +77,8 @@ public class HFTTest {
       System.out.println("count = " + count);
 
     } finally {
-      Optional.ofNullable(queue).ifPresent((chronicleQueue) -> {
-        try {
-          chronicleQueue.close();
-        } catch (Exception e) {
-          e.printStackTrace();
-        }
-      });
+      Optional.ofNullable(queue).ifPresent(Closeable::closeQuietly);
     }
-
   }
 
 //  @org.junit.Test
