@@ -5,6 +5,7 @@ import my.twister.utils.LogAware;
 import my.twister.utils.Utils;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ChronicleQueueBuilder;
+import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -39,8 +40,8 @@ public abstract class ChronicleQueueDataService implements LogAware {
     @Override
     public ChronicleQueue createQueue(String id) {
       String location = getQueueLocation(id);
-//      return SingleChronicleQueueBuilder.binary(new File(location)).build();
-      return ChronicleQueueBuilder.single(location).build();
+      return SingleChronicleQueueBuilder.binary(new File(location)).build();
+//      return ChronicleQueueBuilder.single(location).build();
     }
 
     @Override

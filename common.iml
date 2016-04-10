@@ -41,7 +41,7 @@
     <orderEntry type="library" name="Maven: stax:stax-api:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.ops4j.pax.url:pax-url-aether:2.4.5" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:jcl-over-slf4j:1.6.6" level="project" />
-    <orderEntry type="library" name="Maven: net.openhft:chronicle-queue:4.2.1" level="project" />
+    <orderEntry type="library" name="Maven: net.openhft:chronicle-queue:4.0.9" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:19.0" level="project" />
     <orderEntry type="library" name="Maven: org.projectlombok:lombok:1.16.6" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />

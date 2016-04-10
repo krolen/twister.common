@@ -1,6 +1,7 @@
 package my.twister.hfttest;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.Uninterruptibles;
 import my.twister.utils.Constants;
 import my.twister.utils.Utils;
@@ -13,8 +14,10 @@ import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ChronicleQueueBuilder;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 import net.openhft.chronicle.values.Array;
 import net.openhft.chronicle.values.Values;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +30,7 @@ import java.util.stream.LongStream;
  */
 public class HFTTest {
 
-//  @Test
+  //  @Test
   public void testCreateAndDeleteFiles() {
     File file = Utils.getOrCreateFile("hfttests" + File.separator + "delete", true);
     try {
@@ -41,36 +44,40 @@ public class HFTTest {
     Uninterruptibles.sleepUninterruptibly(30, TimeUnit.SECONDS);
   }
 
-//  @Test
+//    @Test
   public void testQueue() {
     ChronicleQueue queue = null;
     try {
 
-      queue = ChronicleQueueBuilder.single("hfttests" + File.separator + "deletequeue").build();
-//      queue = SingleChronicleQueueBuilder.binary(new File("hfttests" + File.separator + "deletequeue")).build();
-      final VanillaBytes<Void> writeBytes = Bytes.allocateDirect(8);
-      VanillaBytes<Void> readBytes = Bytes.allocateDirect(8);
+//      queue = ChronicleQueueBuilder.single("hfttests" + File.separator + "deletequeue").build();
+      queue = SingleChronicleQueueBuilder.binary(new File("hfttests" + File.separator + "deletequeue")).build();
+      final VanillaBytes<Void> writeBytes = Bytes.allocateDirect(Long.BYTES * 2);
       final ExcerptAppender appender = queue.createAppender();
-      ExcerptTailer tailer = queue.createTailer();
 
 //      Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().build()).execute(() -> {
       Stopwatch started = Stopwatch.createStarted();
-      LongStream.range(0, 5_00).forEach((l) -> {
-//      LongStream.range(0, 5_000_000).forEach((l) -> {
-          appender.writeBytes(writeBytes.append(l));
-          writeBytes.clear();
-        });
+      LongStream.range(1, 5_000_000).forEach((l) -> {
+//        writeBytes.append(l);
+//        appender.writeBytes(writeBytes);
+//        writeBytes.clear();
+
+        writeBytes.append(l * 100);
+        appender.writeBytes(writeBytes);
+        writeBytes.clear();
+      });
       System.out.println(started.elapsed(TimeUnit.NANOSECONDS));
 //      });
       started.reset();
 
       Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
       int count = 0;
+      VanillaBytes<Void> readBytes = Bytes.allocateDirect(Long.BYTES * 2);
+      ExcerptTailer tailer = queue.createTailer();
       started.start();
-      while(tailer.readBytes(readBytes)) {
+      while (tailer.readBytes(readBytes)) {
         long l = readBytes.parseLong();
+//        System.out.println(readBytes.parseLong());
         count++;
-//        System.out.println(l);
         readBytes.clear();
       }
       System.out.println(started.elapsed(TimeUnit.NANOSECONDS));
@@ -81,7 +88,7 @@ public class HFTTest {
     }
   }
 
-//  @org.junit.Test
+  //  @org.junit.Test
   public void testArrays() {
     File file = Utils.getOrCreateFile("hfttests" + File.separator + "delete", true);
     ChronicleMap<LongValue, ITest> map = null;
