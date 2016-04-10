@@ -7,6 +7,7 @@ import my.twister.entities.IShortTweet;
 import my.twister.utils.Constants;
 import my.twister.utils.LogAware;
 import my.twister.utils.Utils;
+import net.openhft.chronicle.core.io.Closeable;
 import net.openhft.chronicle.core.values.LongValue;
 import net.openhft.chronicle.map.ChronicleMap;
 
@@ -120,7 +121,7 @@ public class ChronicleDataService implements LogAware {
             filter((l) -> l > lastKey).
             forEach((l) -> {
               if (maxTweetDataMapsToConnect > 0 && tweetsDataMaps.size() > maxTweetDataMapsToConnect) {
-                Optional.ofNullable(tweetsDataMaps.firstEntry().getValue()).ifPresent(ChronicleMap::close);
+                Optional.ofNullable(tweetsDataMaps.firstKey()).ifPresent(this::removeTweetsMap);
               }
               createOrConnectTweetsMap(l);
             });
