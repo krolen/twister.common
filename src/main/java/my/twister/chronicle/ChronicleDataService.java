@@ -121,7 +121,10 @@ public class ChronicleDataService implements LogAware {
             filter((l) -> l > lastKey).
             forEach((l) -> {
               if (maxTweetDataMapsToConnect > 0 && tweetsDataMaps.size() > maxTweetDataMapsToConnect) {
-                Optional.ofNullable(tweetsDataMaps.firstKey()).ifPresent(this::removeTweetsMap);
+                Optional.ofNullable(tweetsDataMaps.firstEntry()).ifPresent( entry -> {
+                  Closeable.closeQuietly(entry.getValue());
+                  tweetsDataMaps.remove(entry.getKey());
+                });
               }
               createOrConnectTweetsMap(l);
             });
