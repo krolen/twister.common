@@ -9,10 +9,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * Created by kkulagin on 5/15/2015.
@@ -21,6 +18,18 @@ public class Utils {
 
   private static final String twitter = "EEE MMM dd HH:mm:ss ZZZZ yyyy";
   private static final SimpleDateFormat sf = new SimpleDateFormat(twitter, Locale.ENGLISH);
+  public static final long MILLIS_PER_HOUR = Duration.ofHours(1).toMillis();
+  private static final NavigableSet<Long> hoursStartsMillis = new TreeSet<>();
+
+  static {
+    long hourStart = LocalDateTime.now().minusHours(4).
+        truncatedTo(ChronoUnit.HOURS).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    // TODO: 4/12/2016 make it normal
+    for (int j = 0; j < 10000; j++) {
+      hoursStartsMillis.add(hourStart + j * MILLIS_PER_HOUR);
+    }
+  }
+
 
   public static Date getTwitterDate(String date) throws ParseException {
     sf.setLenient(true);
@@ -60,6 +69,10 @@ public class Utils {
     }
     dateTime = dateTime.truncatedTo(ChronoUnit.MINUTES).plusMinutes(hourMinute);
     return dateTime;
+  }
+
+  public static long getClosestHourStart(long time) {
+    return hoursStartsMillis.floor(time);
   }
 
   @NotNull

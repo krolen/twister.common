@@ -94,8 +94,8 @@ public class ChronicleDataService implements LogAware {
   }
 
   public ChronicleMap<LongValue, IShortTweet> getTweetsDataMap(long time) {
-    Map.Entry<Long, ChronicleMap<LongValue, IShortTweet>> entry = tweetsDataMaps.floorEntry(time);
-    return entry == null ? null : entry.getValue();
+    ChronicleMap<LongValue, IShortTweet> map = tweetsDataMaps.get(time);
+    return map == null ? null : map;
   }
 
   public void connectTweetsMaps(int maxTweetDataMapsToConnect) {
@@ -134,7 +134,7 @@ public class ChronicleDataService implements LogAware {
     }
   }
 
-  NavigableMap<Long, ChronicleMap<LongValue, IShortTweet>> getTweetsDataMaps() {
+  public NavigableMap<Long, ChronicleMap<LongValue, IShortTweet>> getTweetsDataMaps() {
     return tweetsDataMaps;
   }
 
